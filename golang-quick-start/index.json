@@ -1,0 +1,30 @@
+{
+    "title": "Use OpenTracing with Golang",
+    "description": "Quick Start using OpenTracing with Golang",
+    "difficulty": "beginner",
+    "time": "10-15 minutes",
+    "details": {
+        "steps": [
+            {
+                "title": "Step 1 - Start Jaeger",
+                "text": "step1.md"
+            }
+        ],
+        "intro": {
+            "text": "intro.md",
+            "credits": ""
+        },
+        "finish": {
+            "text": "finish.md"
+        },
+        "assets": {
+        }
+    },
+    "environment": {
+        "uilayout": "editor-terminal",
+        "uimessage1": "\u001b[32mYour Interactive Bash Terminal.\r\nStart Kubernetes using `launch.sh`\u001b[m\r\n"
+    },
+    "backend": {
+        "imageid": "docker-golang"
+    }
+}
