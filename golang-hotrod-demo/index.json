@@ -1,6 +1,6 @@
 {
-    "title": "Use OpenTracing with Golang",
-    "description": "Quick Start using OpenTracing with Golang",
+    "title": "Use OpenTracing with Golang and Hot R.O.D. demo",
+    "description": "Quick start guide using OpenTracing, Golang and Jaeger",
     "difficulty": "beginner",
     "time": "10-15 minutes",
     "details": {
