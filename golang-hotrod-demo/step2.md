@@ -2,6 +2,8 @@ HotROD is a demo “ride sharing” application written in Golang.
 
 ## Download and Build
 
+The command below downloads the example application, configuration and dependencies.
+
 `
 go get github.com/uber/jaeger && \
 ln -s /gopath/src/github.com/uber/jaeger/examples/hotrod ~/tutorial/hotrod && \
@@ -14,6 +16,6 @@ cd examples/hotrod
 
 ## Run
 
-`go run ./main.go all`{{execute}}
+Launch the application application with the command `go run ./main.go all`{{execute}}
 
-The all command tells it to run all microservices from a single binary. In the logs written to standard out we can see these microservices starting.
+The all command tells Go to run all the microservices as a single binary. The logs are written to standard out allowing you to see the microservices starting.
