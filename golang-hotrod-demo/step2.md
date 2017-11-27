@@ -6,12 +6,12 @@ The command below downloads the example application, configuration and dependenc
 
 `
 go get github.com/uber/jaeger && \
-ln -s /gopath/src/github.com/uber/jaeger/examples/hotrod ~/tutorial/hotrod && \
-curl -sSL https://gist.githubusercontent.com/BenHall/f42fc3c684895edf107a272f4a1df5f4/raw/2452cfa63908957b59dfeab44869b28489503103/frontend.go -o /gopath/src/github.com/uber/jaeger/examples/hotrod/cmd/frontend.go && \
-curl -sSL https://gist.githubusercontent.com/BenHall/f42fc3c684895edf107a272f4a1df5f4/raw/2452cfa63908957b59dfeab44869b28489503103/init.go -o /gopath/src/github.com/uber/jaeger/examples/hotrod/pkg/tracing/init.go && \
 cd /gopath/src/github.com/uber/jaeger && \
-make install_examples && \
-cd examples/hotrod
+make install && \
+cd examples/hotrod && \
+sed -i 's/127\.0\.0\.1/0.0.0.0/' cmd/frontend.go && \
+sed -i 's/ReporterConfig{/ReporterConfig{LocalAgentHostPort: "docker:5775",/' pkg/tracing/init.go && \
+go get 
 `{{execute}}
 
 ## Run
