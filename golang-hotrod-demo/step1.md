@@ -4,6 +4,8 @@ We will be using an open source distributed tracing system Jaeger to collect and
 
 To launch Jaeger, start the Docker container demo.
 
-`docker run -d -p 5775:5775/udp -p 16686:16686 jaegertracing/all-in-one:latest`{{execute}}
+`docker run -d --name jaeger \
+  -p 5775:5775/udp -p 16686:16686 \
+  jaegertracing/all-in-one:latest`{{execute}}
 
 Port _5775_ is used for collecting metrics, while _16686_ is used for accessing the Jaeger dashboard.

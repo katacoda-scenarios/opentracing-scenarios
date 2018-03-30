@@ -1,4 +1,4 @@
-With HotROD started, view the application at https://[[CLIENT_SUBDOMAIN]]-8080-[[KATACODA_HOST]].environments.katacoda.com/
+With HotROD started, view the application at https://[[HOST_SUBDOMAIN]]-8080-[[KATACODA_HOST]].environments.katacoda.com/
 
 Within the application, by clicking one of the four buttons we summon a car to arrive to the customer’s location, perhaps to pick up a product and deliver it elsewhere. Once a request for a car is sent to the backend, it responds with the car’s license plate number and the expected time of arrival.
 
@@ -11,4 +11,3 @@ There are a few bits of debugging information we see on the screen.
 3) The last bit of debugging data, latency: 782ms, is measured by the Javascript UI and shows how long the backend took to respond.
 
 This additional information has no impact on the behavior of the application, but will be useful when we look under the hood.
-

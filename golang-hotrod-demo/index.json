@@ -37,10 +37,13 @@
         }
     },
     "environment": {
+        "showdashboard": true,
+        "dashboards": [{"name": "Hot R.O.D.", "port": 8080}, {"name": "Jaeger UI", "port": 16686}],
         "uilayout": "terminal",
         "uimessage1": "\u001b[32mYour Interactive Bash Terminal.\u001b[m\r\n"
     },
     "backend": {
-        "imageid": "docker-golang"
+        "port": 8080,
+        "imageid": "docker"
     }
 }
