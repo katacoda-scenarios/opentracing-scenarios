@@ -34,10 +34,10 @@
     }
   },
   "files": [
-    "opentracing-tutorial/java/src/main/java/lesson03/exercise/Hello.java",
-    "opentracing-tutorial/java/src/main/java/lesson03/exercise/Formatter.java",
-    "opentracing-tutorial/java/src/main/java/lesson03/exercise/Publisher.java",
-    "opentracing-tutorial/java/src/main/java/lesson03/exercise/RequestBuilderCarrier.java"
+    "java/src/main/java/lesson03/exercise/Hello.java",
+    "java/src/main/java/lesson03/exercise/Formatter.java",
+    "java/src/main/java/lesson03/exercise/Publisher.java",
+    "java/src/main/java/lesson03/exercise/RequestBuilderCarrier.java"
   ],
   "environment": {
     "uilayout": "editor-terminal",

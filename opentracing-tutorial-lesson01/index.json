@@ -30,7 +30,7 @@
     }
   },
   "files": [
-    "opentracing-tutorial/java/src/main/java/lesson01/exercise/Hello.java"
+    "java/src/main/java/lesson01/exercise/Hello.java"
   ],
   "environment": {
     "uilayout": "editor-terminal",
