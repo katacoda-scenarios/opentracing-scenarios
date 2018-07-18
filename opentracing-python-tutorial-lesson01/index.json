@@ -1,0 +1,43 @@
+{
+  "backend":{
+    "imageid":"ubuntu"
+  },
+  "environment":{
+    "uilayout":"editor-terminal",
+    "uieditorpath":"/root/opentracing-tutorial/python/lesson01",
+    "showdashboard":true,
+    "dashboards":[{"name":"Jaeger UI", "port":16686}]
+  },
+  "details":{
+    "intro":{
+      "text":"introduction.md",
+      "code":"set-env.sh",
+      "credits":"This tutorial is inspired by [Yurishkuro's OpenTracing Tutorial](https://github.com/yurishkuro/opentracing-tutorial)"
+    },
+    "steps":[
+      {
+        "title":"Quick Hello World Example",
+        "text":"step-00.md"
+      },
+      {
+        "title":"Initialize the Tracer",
+        "text":"initialize-tracer.md"
+      },
+      {
+        "title":"Create a Trace",
+        "text":"create-trace.md"
+      },
+      {
+        "title":"Annotate a Trace",
+        "text":"annotate-trace.md"
+      }
+    ],
+    "finish":{
+      "text":"end.md"
+    }
+  },
+  "title":"OpenTracing Python Tutorial - Lesson 01",
+  "description":"Learn basics of OpenTracing",
+  "difficulty":"Beginner",
+  "time":"10 minutes"
+}
