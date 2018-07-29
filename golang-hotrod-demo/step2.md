@@ -6,7 +6,7 @@ Start the app as a Docker Container with the following command:
 
 `docker run --rm -it \
   --link jaeger -p8080-8083:8080-8083 \
-  jaegertracing/example-hotrod:latest \
+  jaegertracing/example-hotrod:1.3 \
   --jaeger-agent.host-port=jaeger:6831`{{execute}}
 
 More details on the sample application can be found at https://github.com/jaegertracing/jaeger/tree/master/examples/hotrod
