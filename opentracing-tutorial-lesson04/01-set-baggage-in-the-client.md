@@ -11,8 +11,6 @@ public static void main(String[] args) {
     String greeting = args[1];
     Tracer tracer = Tracing.init("hello-world");
     new Hello(tracer).sayHello(helloTo, greeting);
-    tracer.close();
-    System.exit(0); // okhttpclient sometimes hangs maven otherwise
 }
 </pre>
 

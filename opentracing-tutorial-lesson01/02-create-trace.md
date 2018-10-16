@@ -5,18 +5,19 @@ Let's create a trace that consists of just a single span. To do that we need an 
 <pre class="file" data-filename="opentracing-tutorial/java/src/main/java/lesson01/exercise/Hello.java" data-target="replace">package lesson01.exercise;
 
 import io.opentracing.Span;
+import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 
 public class Hello {
 
-    private final io.opentracing.Tracer tracer;
+    private final Tracer tracer;
 
-    private Hello(io.opentracing.Tracer tracer) {
+    private Hello(Tracer tracer) {
         this.tracer = tracer;
     }
 
     private void sayHello(String helloTo) {
-        Span span = tracer.buildSpan("say-hello").startManual();
+        Span span = tracer.buildSpan("say-hello").start();
 
         String helloStr = String.format("Hello, %s!", helloTo);
         System.out.println(helloStr);
