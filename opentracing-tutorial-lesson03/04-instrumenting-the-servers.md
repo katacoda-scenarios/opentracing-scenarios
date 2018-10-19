@@ -31,13 +31,13 @@ import lib.Tracing;
 
 #### Extract the span context from the incoming request using `tracer.extract`
 
-First, let's add a helper function on the Hello class:
+First, let's add a helper function on the Tracing class:
 
 <pre class="file" data-target="clipboard">
 public static Scope startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders httpHeaders, String operationName) {
     // format the headers for extraction
-    MultivaluedMap&lt;String, String&gt; rawHeaders = httpHeaders.getRequestHeaders();
-    final HashMap&lt;String, String&gt; headers = new HashMap&lt;String, String&gt;();
+    MultivaluedMap< String, String> rawHeaders = httpHeaders.getRequestHeaders();
+    final HashMap< String, String> headers = new HashMap< String, String>();
     for (String key : rawHeaders.keySet()) {
         headers.put(key, rawHeaders.get(key).get(0));
     }
@@ -59,6 +59,7 @@ public static Scope startServerSpan(Tracer tracer, javax.ws.rs.core.HttpHeaders 
 
 And import the newly used classes:
 <pre class="file" data-target="clipboard">
+import io.opentracing.Scope;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMapExtractAdapter;
@@ -74,7 +75,7 @@ Now change the `FormatterResource` handler method to use `startServerSpan`:
 <pre class="file" data-target="clipboard">
 @GET
 public String format(@QueryParam("helloTo") String helloTo, @Context HttpHeaders httpHeaders) {
-    try (Scope scope = Tracing.startServerSpan(tracer, httpHeaders, "format")) {
+    try (Scope scope = startServerSpan(tracer, httpHeaders, "format")) {
         String helloStr = String.format("Hello, %s!", helloTo);
         scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
         return helloStr;
@@ -84,7 +85,6 @@ public String format(@QueryParam("helloTo") String helloTo, @Context HttpHeaders
 
 And import the newly used classes:
 <pre class="file" data-target="clipboard">
-import io.opentracing.Scope;
 import com.google.common.collect.ImmutableMap;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;

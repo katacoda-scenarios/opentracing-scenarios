@@ -3,9 +3,15 @@ In Lesson 1 we wrote a program that creates a trace that consists of a single sp
 <pre class="file" data-filename="opentracing-tutorial/java/src/main/java/lesson02/exercise/Hello.java" data-target="replace">package lesson02.exercise;
 
 import io.opentracing.Span;
+import io.opentracing.Tracer;
+import io.opentracing.util.GlobalTracer;
+
+import io.jaegertracing.Configuration;
+import io.jaegertracing.Configuration.ReporterConfiguration;
+import io.jaegertracing.Configuration.SamplerConfiguration;
+import io.jaegertracing.internal.JaegerTracer;
+
 import com.google.common.collect.ImmutableMap;
-import com.uber.jaeger.Tracer;
-import lib.Tracing;
 
 public class Hello {
 
@@ -16,7 +22,7 @@ public class Hello {
     }
 
     private void sayHello(String helloTo) {
-        Span span = tracer.buildSpan("say-hello").startManual();
+        Span span = tracer.buildSpan("say-hello").start();
         span.setTag("hello-to", helloTo);
 
         String helloStr = String.format("Hello, %s!", helloTo);
@@ -33,9 +39,15 @@ public class Hello {
             throw new IllegalArgumentException("Expecting one argument");
         }
         String helloTo = args[0];
-        Tracer tracer = Tracing.init("hello-world");
+        Tracer tracer = initTracer("hello-world");
         new Hello(tracer).sayHello(helloTo);
-        tracer.close();
+    }
+
+    public static JaegerTracer initTracer(String service) {
+        SamplerConfiguration samplerConfig = new SamplerConfiguration().fromEnv().withType("const").withParam(1);
+        ReporterConfiguration reporterConfig = new ReporterConfiguration().fromEnv().withLogSpans(true);
+        Configuration config = new Configuration(service).withSampler(samplerConfig).withReporter(reporterConfig);
+        return config.getTracer();
     }
 }</pre>
 
@@ -66,8 +78,8 @@ private void printHello(Span span, String helloStr) {
 Of course, this does not change the outcome. What we really want to do is to wrap each function into its own span.
 
 <pre class="file" data-target="clipboard">
-private String formatString(Span rootSpan, String helloTo) {
-    Span span = tracer.buildSpan("formatString").startManual();
+private  String formatString(Span rootSpan, String helloTo) {
+    Span span = tracer.buildSpan("formatString").start();
     try {
         String helloStr = String.format("Hello, %s!", helloTo);
         span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
@@ -78,7 +90,7 @@ private String formatString(Span rootSpan, String helloTo) {
 }
 
 private void printHello(Span rootSpan, String helloStr) {
-    Span span = tracer.buildSpan("printHello").startManual();
+    Span span = tracer.buildSpan("printHello").start();
     try {
         System.out.println(helloStr);
         span.log(ImmutableMap.of("event", "println"));
@@ -107,11 +119,14 @@ For reference, here's how our final code looks like:
 <pre class="file" data-filename="opentracing-tutorial/java/src/main/java/lesson02/exercise/Hello.java" data-target="replace">package lesson02.exercise;
 
 import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import io.opentracing.Tracer;
+
+import io.jaegertracing.Configuration;
+import io.jaegertracing.Configuration.ReporterConfiguration;
+import io.jaegertracing.Configuration.SamplerConfiguration;
+import io.jaegertracing.internal.JaegerTracer;
 
 import com.google.common.collect.ImmutableMap;
-import com.uber.jaeger.Tracer;
-import lib.Tracing;
 
 public class Hello {
 
@@ -122,7 +137,7 @@ public class Hello {
     }
 
     private void sayHello(String helloTo) {
-        Span span = tracer.buildSpan("say-hello").startManual();
+        Span span = tracer.buildSpan("say-hello").start();
         span.setTag("hello-to", helloTo);
 
         String helloStr = formatString(span, helloTo);
@@ -131,8 +146,8 @@ public class Hello {
         span.finish();
     }
 
-    private  String formatString(Span rootSpan, String helloTo) {
-        Span span = tracer.buildSpan("formatString").asChildOf(rootSpan).startManual();
+    private String formatString(Span rootSpan, String helloTo) {
+        Span span = tracer.buildSpan("formatString").start();
         try {
             String helloStr = String.format("Hello, %s!", helloTo);
             span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
@@ -143,7 +158,7 @@ public class Hello {
     }
 
     private void printHello(Span rootSpan, String helloStr) {
-        Span span = tracer.buildSpan("printHello").asChildOf(rootSpan).startManual();
+        Span span = tracer.buildSpan("printHello").start();
         try {
             System.out.println(helloStr);
             span.log(ImmutableMap.of("event", "println"));
@@ -157,8 +172,14 @@ public class Hello {
             throw new IllegalArgumentException("Expecting one argument");
         }
         String helloTo = args[0];
-        Tracer tracer = Tracing.init("hello-world");
+        Tracer tracer = initTracer("hello-world");
         new Hello(tracer).sayHello(helloTo);
-        tracer.close();
+    }
+
+    public static JaegerTracer initTracer(String service) {
+        SamplerConfiguration samplerConfig = new SamplerConfiguration().fromEnv().withType("const").withParam(1);
+        ReporterConfiguration reporterConfig = new ReporterConfiguration().fromEnv().withLogSpans(true);
+        Configuration config = new Configuration(service).withSampler(samplerConfig).withReporter(reporterConfig);
+        return config.getTracer();
     }
 }</pre>

@@ -2,16 +2,18 @@ We'll start this lesson based on where we left the last lesson, plus a small ref
 
 <pre class="file" data-filename="opentracing-tutorial/java/src/main/java/lesson03/exercise/Hello.java" data-target="replace">package lesson03.exercise;
 
+import java.io.IOException;
+
 import com.google.common.collect.ImmutableMap;
-import com.uber.jaeger.Tracer;
+
+import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Scope;
+import io.opentracing.Tracer;
 import lib.Tracing;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import java.io.IOException;
 
 public class Hello {
 
@@ -67,27 +69,28 @@ public class Hello {
         if (args.length != 1) {
             throw new IllegalArgumentException("Expecting one argument");
         }
+
         String helloTo = args[0];
-        Tracer tracer = Tracing.init("hello-world");
-        new Hello(tracer).sayHello(helloTo);
-        tracer.close();
-        System.exit(0); // okhttpclient sometimes hangs maven otherwise
+        try (JaegerTracer tracer = Tracing.init("hello-world")) {
+            new Hello(tracer).sayHello(helloTo);
+        }
     }
-}</pre>
+}
+</pre>
 
 Let's add a `formatter` service, which is a Dropwizard-based HTTP server that responds to a request like `GET 'http://localhost:8081/format?helloTo=Bryan'` and returns `"Hello, Bryan!"` string
 
 <pre class="file" data-filename="opentracing-tutorial/java/src/main/java/lesson03/exercise/Formatter.java" data-target="replace">package lesson03.exercise;
-
-import io.dropwizard.Application;
-import io.dropwizard.Configuration;
-import io.dropwizard.setup.Environment;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
+import io.dropwizard.Application;
+import io.dropwizard.Configuration;
+import io.dropwizard.setup.Environment;
 
 public class Formatter extends Application< Configuration> {
 
@@ -118,15 +121,15 @@ And finally, a `publisher` service, that is another HTTP server that responds to
 
 <pre class="file" data-filename="opentracing-tutorial/java/src/main/java/lesson03/exercise/Publisher.java" data-target="replace">package lesson03.exercise;
 
-import io.dropwizard.Application;
-import io.dropwizard.Configuration;
-import io.dropwizard.setup.Environment;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
+import io.dropwizard.Application;
+import io.dropwizard.Configuration;
+import io.dropwizard.setup.Environment;
 
 public class Publisher extends Application< Configuration> {
 
@@ -151,7 +154,8 @@ public class Publisher extends Application< Configuration> {
         System.setProperty("dw.server.adminConnectors[0].port", "9082");
         new Publisher().run(args);
     }
-}</pre>
+}
+</pre>
 
 With all that in place, let's switch to the Java version of the tutorial: `cd opentracing-tutorial/java`{{execute}}.
 

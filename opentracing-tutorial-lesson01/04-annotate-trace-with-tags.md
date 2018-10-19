@@ -12,7 +12,7 @@ Using Tags
 In the case of `Hello Bryan`, the string `"Bryan"` is a good candidate for a span tag, since it applies to the whole span and not to a particular moment in time. We can record it like this:
 
 <pre class="file" data-target="clipboard">
-Span span = tracer.buildSpan("say-hello").startManual();
+Span span = tracer.buildSpan("say-hello").start();
 span.setTag("hello-to", helloTo);
 </pre>
 
@@ -46,11 +46,15 @@ If you run the program with these changes, then find the trace in the UI and exp
 <pre class="file" data-filename="opentracing-tutorial/java/src/main/java/lesson01/exercise/Hello.java" data-target="replace">package lesson01.exercise;
 
 import io.opentracing.Span;
+import io.opentracing.Tracer;
+import io.opentracing.util.GlobalTracer;
+
+import io.jaegertracing.Configuration;
+import io.jaegertracing.Configuration.ReporterConfiguration;
+import io.jaegertracing.Configuration.SamplerConfiguration;
+import io.jaegertracing.internal.JaegerTracer;
+
 import com.google.common.collect.ImmutableMap;
-import com.uber.jaeger.Configuration;
-import com.uber.jaeger.Configuration.ReporterConfiguration;
-import com.uber.jaeger.Configuration.SamplerConfiguration;
-import com.uber.jaeger.Tracer;
 
 public class Hello {
 
@@ -61,9 +65,9 @@ public class Hello {
     }
 
     private void sayHello(String helloTo) {
-        Span span = tracer.buildSpan("say-hello").startManual();
+        Span span = tracer.buildSpan("say-hello").start();
         span.setTag("hello-to", helloTo);
-        
+
         String helloStr = String.format("Hello, %s!", helloTo);
         span.log(ImmutableMap.of("event", "string-format", "value", helloStr));
 
@@ -78,17 +82,15 @@ public class Hello {
             throw new IllegalArgumentException("Expecting one argument");
         }
         String helloTo = args[0];
-
-        com.uber.jaeger.Tracer tracer = initTracer("hello-world");
+        Tracer tracer = initTracer("hello-world");
         new Hello(tracer).sayHello(helloTo);
-        tracer.close();
     }
 
-    public static com.uber.jaeger.Tracer initTracer(String service) {
-        SamplerConfiguration samplerConfig = new SamplerConfiguration("const", 1);
-        ReporterConfiguration reporterConfig = ReporterConfiguration.fromEnv();
-        Configuration config = new Configuration(service, samplerConfig, reporterConfig);
-        return (com.uber.jaeger.Tracer) config.getTracer();
+    public static JaegerTracer initTracer(String service) {
+        SamplerConfiguration samplerConfig = new SamplerConfiguration().fromEnv().withType("const").withParam(1);
+        ReporterConfiguration reporterConfig = new ReporterConfiguration().fromEnv().withLogSpans(true);
+        Configuration config = new Configuration(service).withSampler(samplerConfig).withReporter(reporterConfig);
+        return config.getTracer();
     }
 }</pre>
 

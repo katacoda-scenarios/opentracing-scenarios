@@ -3,9 +3,13 @@ As before, first run the `formatter` and `publisher` apps in separate terminals.
 For reference, here's how client looks like:
 <pre class="file" data-filename="opentracing-tutorial/java/src/main/java/lesson03/exercise/Hello.java" data-target="replace">package lesson03.exercise;
 
+import java.io.IOException;
+
 import com.google.common.collect.ImmutableMap;
-import com.uber.jaeger.Tracer;
+
+import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Scope;
+import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import lib.Tracing;
@@ -13,8 +17,6 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import java.io.IOException;
 
 public class Hello {
 
@@ -76,28 +78,18 @@ public class Hello {
         if (args.length != 1) {
             throw new IllegalArgumentException("Expecting one argument");
         }
+
         String helloTo = args[0];
-        Tracer tracer = Tracing.init("hello-world");
-        new Hello(tracer).sayHello(helloTo);
-        tracer.close();
-        System.exit(0); // okhttpclient sometimes hangs maven otherwise
+        try (JaegerTracer tracer = Tracing.init("hello-world")) {
+            new Hello(tracer).sayHello(helloTo);
+        }
     }
 }</pre>
 
 At this point, our Formatter is like this:
 <pre class="file" data-filename="opentracing-tutorial/java/src/main/java/lesson03/exercise/Formatter.java" data-target="replace">package lesson03.exercise;
 
-import com.google.common.collect.ImmutableMap;
-import io.dropwizard.Application;
-import io.dropwizard.Configuration;
-import io.dropwizard.setup.Environment;
-import io.opentracing.Scope;
-import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMapExtractAdapter;
-import io.opentracing.tag.Tags;
-import lib.Tracing;
+import java.util.HashMap;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -107,7 +99,20 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import java.util.HashMap;
+
+import com.google.common.collect.ImmutableMap;
+
+import io.dropwizard.Application;
+import io.dropwizard.Configuration;
+import io.dropwizard.setup.Environment;
+import io.jaegertracing.internal.JaegerTracer;
+import io.opentracing.Scope;
+import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
+import io.opentracing.propagation.Format;
+import io.opentracing.propagation.TextMapExtractAdapter;
+import io.opentracing.tag.Tags;
+import lib.Tracing;
 
 public class Formatter extends Application< Configuration> {
     private final Tracer tracer;
@@ -119,16 +124,14 @@ public class Formatter extends Application< Configuration> {
     @Path("/format")
     @Produces(MediaType.TEXT_PLAIN)
     public class FormatterResource {
-
         @GET
         public String format(@QueryParam("helloTo") String helloTo, @Context HttpHeaders httpHeaders) {
-            try (Scope scope = startServerSpan(tracer, httpHeaders, "format")) {
+            try (Scope scope = Tracing.startServerSpan(tracer, httpHeaders, "format")) {
                 String helloStr = String.format("Hello, %s!", helloTo);
                 scope.span().log(ImmutableMap.of("event", "string-format", "value", helloStr));
                 return helloStr;
             }
-        }
-
+        }        
     }
 
     @Override
@@ -151,7 +154,7 @@ public class Formatter extends Application< Configuration> {
         for (String key : rawHeaders.keySet()) {
             headers.put(key, rawHeaders.get(key).get(0));
         }
-
+    
         Tracer.SpanBuilder spanBuilder;
         try {
             SpanContext parentSpan = tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(headers));
@@ -164,13 +167,23 @@ public class Formatter extends Application< Configuration> {
             spanBuilder = tracer.buildSpan(operationName);
         }
         return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(true);
-    }
+    }  
 }</pre>
 
 And our Publisher:
 <pre class="file" data-filename="opentracing-tutorial/java/src/main/java/lesson03/exercise/Publisher.java" data-target="replace">package lesson03.exercise;
 
-import com.google.common.collect.ImmutableMap;
+import java.util.HashMap;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
 import io.dropwizard.Application;
 import io.dropwizard.Configuration;
 import io.dropwizard.setup.Environment;
@@ -182,18 +195,7 @@ import io.opentracing.propagation.TextMapExtractAdapter;
 import io.opentracing.tag.Tags;
 import lib.Tracing;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import java.util.HashMap;
-
 public class Publisher extends Application< Configuration> {
-
     private final Tracer tracer;
 
     private Publisher(Tracer tracer) {
@@ -203,12 +205,10 @@ public class Publisher extends Application< Configuration> {
     @Path("/publish")
     @Produces(MediaType.TEXT_PLAIN)
     public class PublisherResource {
-
         @GET
         public String format(@QueryParam("helloStr") String helloStr, @Context HttpHeaders httpHeaders) {
             try (Scope scope = startServerSpan(tracer, httpHeaders, "publish")) {
                 System.out.println(helloStr);
-                scope.span().log(ImmutableMap.of("event", "println", "value", helloStr));
                 return "published";
             }
         }
@@ -222,6 +222,7 @@ public class Publisher extends Application< Configuration> {
     public static void main(String[] args) throws Exception {
         System.setProperty("dw.server.applicationConnectors[0].port", "8082");
         System.setProperty("dw.server.adminConnectors[0].port", "9082");
+
         Tracer tracer = Tracing.init("publisher");
         new Publisher(tracer).run(args);
     }
@@ -233,7 +234,7 @@ public class Publisher extends Application< Configuration> {
         for (String key : rawHeaders.keySet()) {
             headers.put(key, rawHeaders.get(key).get(0));
         }
-
+    
         Tracer.SpanBuilder spanBuilder;
         try {
             SpanContext parentSpan = tracer.extract(Format.Builtin.HTTP_HEADERS, new TextMapExtractAdapter(headers));
@@ -246,7 +247,7 @@ public class Publisher extends Application< Configuration> {
             spanBuilder = tracer.buildSpan(operationName);
         }
         return spanBuilder.withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER).startActive(true);
-    }
+    }  
 }</pre>
 
 Formatter: `./run.sh lesson03.exercise.Formatter server`{{execute}}
